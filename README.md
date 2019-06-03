@@ -1,6 +1,8 @@
 # sushigo
 Command line SushiGo card game played against an AI using a minimax algorithm. The rules for the card game may be found [here.](https://www.gamewright.com/gamewright/pdfs/Rules/SushiGoTM-RULES.pdf)
 
+Inspiration was taken from [this python implementation](https://github.com/qubd/sushigo).
+
 ## Setup
 ### Dependencies
 This program requires the use of System.Random, you may need to install it before being able to compile:
