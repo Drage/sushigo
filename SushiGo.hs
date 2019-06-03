@@ -91,7 +91,6 @@ gameLoop gameState = do
         else do
             let playerMove = cardIndexToMove (read input :: Int)
             let aiMove = minimax searchDepth gameState
-            print aiMove
             let newGameState = play gameState playerMove aiMove
             gameLoop newGameState
 
