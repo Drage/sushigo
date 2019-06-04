@@ -14,24 +14,7 @@ data GameState = GameState {
     opponentTable :: [String]
 } deriving (Eq, Ord, Show)
 
-data Move = Move {
-    cardIndex :: Int,
-    chopsticksExtraCardIndex :: Int
-} deriving (Eq, Ord, Show)
-
-cardIndexToMove :: Int -> Move
-cardIndexToMove index =
-    Move {
-        cardIndex = index,
-        chopsticksExtraCardIndex = -1
-    }
-
-cardIndexesToMove :: (Int, Int) -> Move
-cardIndexesToMove (index1, index2) =
-    Move {
-        cardIndex = index1,
-        chopsticksExtraCardIndex = index2
-    }
+type Move = (Int, Int)
 
 
 main = do
@@ -84,12 +67,12 @@ gameLoop gameState = do
             let moves = splitString (==',') input
             let move1 = (read (moves !! 0) :: Int)
             let move2 = if hasChopsticks then (read (moves !! 1) :: Int) else -1
-            let playerMove = cardIndexesToMove (move1, move2)
+            let playerMove = (move1, move2)
             let aiMove = minimax searchDepth gameState
             let newGameState = play gameState playerMove aiMove
             gameLoop newGameState
         else do
-            let playerMove = cardIndexToMove (read input :: Int)
+            let playerMove = ((read input :: Int), -1)
             let aiMove = minimax searchDepth gameState
             let newGameState = play gameState playerMove aiMove
             gameLoop newGameState
@@ -116,9 +99,9 @@ doMove (hand, table) move =
                 newCard = if hasWasabi && isNigiri then card ++ "Wasabi" else card
                 newTable = if hasWasabi && isNigiri then delete "Wasabi" (table ++ [newCard]) else table ++ [newCard]
             in (newHand, newTable)
-        usingChopsticks = (chopsticksExtraCardIndex move) /= -1
-        card1 = hand !! (cardIndex move)
-        card2 = if usingChopsticks then hand !! (chopsticksExtraCardIndex move) else []
+        usingChopsticks = (snd move) /= -1
+        card1 = hand !! (fst move)
+        card2 = if usingChopsticks then hand !! (snd move) else []
         afterMove1 = applyMove (hand, table) card1
         afterMove2 = if not usingChopsticks then afterMove1 else applyMove afterMove1 card2
         newHand = if usingChopsticks then (fst afterMove2) ++ ["Chopsticks"] else (fst afterMove2)
@@ -191,10 +174,9 @@ getPossibleMoves :: ([String], [String]) -> [Move]
 getPossibleMoves (hand, table) = 
     let numCards = length hand
         cardIndexes = [0..(numCards - 1)]
-        standardMoves = map cardIndexToMove cardIndexes
+        standardMoves = map (\(x) -> (x, -1)) cardIndexes
         hasChopsticks = (length (filter (=="Chopsticks") table) > 0)
-        chopsticksCombos = filter (\(x,y) -> x /= y) (nubBy moveEq [(x,y) | x<-cardIndexes, y<-cardIndexes])
-        chopsticksMoves = map cardIndexesToMove chopsticksCombos
+        chopsticksMoves = filter (\(x,y) -> x /= y) (nubBy moveEq [(x,y) | x<-cardIndexes, y<-cardIndexes])
     in if hasChopsticks then standardMoves ++ chopsticksMoves else standardMoves
 
 moveEq :: Eq a => (a,a) -> (a,a) -> Bool
@@ -205,10 +187,7 @@ greedy gameState =
     let moves = getPossibleMoves ((opponentHand gameState), (opponentTable gameState))
         newStates = map (opponentMove gameState) moves
         scores = map evaluateScore newStates
-    in Move {
-        cardIndex = minIndex scores,
-        chopsticksExtraCardIndex = -1
-    }
+    in (minIndex scores, -1)
 
 minimax :: Int -> GameState -> Move
 minimax depth gameState =
